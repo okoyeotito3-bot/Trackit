@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrackIt — Luggage Tracking System</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2f5a;
+    --navy-dark: #0f1e3d;
+    --navy-light: #243770;
+    --blue: #2563eb;
+    --blue-light: #3b82f6;
+    --gold: #f59e0b;
+    --gold-light: #fbbf24;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(26,47,90,0.10);
+    --shadow-lg: 0 8px 40px rgba(26,47,90,0.16);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: block; }
+
+  /* ── LANDING ── */
+  #landing {
+    background: linear-gradient(145deg, var(--navy-dark) 0%, var(--navy) 50%, var(--navy-light) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  #landing.active { display: flex; }
+
+  #landing::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(37,99,235,0.25) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    border-radius: 50%;
+  }
+  #landing::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(245,158,11,0.12) 0%, transparent 70%);
+    bottom: -80px; left: -80px;
+    border-radius: 50%;
+  }
+
+  .landing-logo {
+    font-size: 52px;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .landing-title {
+    font-size: 38px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .landing-title span { color: var(--gold); }
+
+  .landing-sub {
+    color: rgba(255,255,255,0.6);
+    font-size: 15px;
+    margin-bottom: 48px;
+    font-weight: 300;
+  }
+
+  .landing-btns { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 320px; z-index: 1; }
+
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    padding: 16px 28px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-primary:hover { background: var(--blue-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(37,99,235,0.4); }
+
+  .btn-outline {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    padding: 16px 28px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.6); }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--navy);
+    color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+  .topbar-title { font-size: 18px; font-weight: 600; }
+  .topbar-back { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 4px 8px; }
+  .notif-btn {
+    background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;
+    position: relative;
+  }
+  .notif-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: #ef4444; color: #fff;
+    font-size: 10px; font-weight: 700;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Sora', sans-serif;
+  }
+
+  /* ── ADMIN DASHBOARD ── */
+  #admin { background: var(--bg); }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 20px;
+  }
+  .stat-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: transform 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 700; color: var(--navy); font-family: 'JetBrains Mono', monospace; }
+  .stat-card.in-transit .stat-value { color: var(--blue); }
+  .stat-card.delivered .stat-value { color: var(--success); }
+
+  .section-pad { padding: 0 20px 20px; }
+
+  .btn-add {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    padding: 15px 20px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+  }
+  .btn-add:hover { background: var(--blue-light); transform: translateY(-1px); }
+
+  .btn-manage {
+    background: #475569;
+    color: #fff;
+    border: none;
+    padding: 14px 20px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+  }
+  .btn-manage:hover { background: #334155; }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 24px 0 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .luggage-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .luggage-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .luggage-item:hover { transform: translateX(4px); border-color: var(--blue-light); }
+
+  .luggage-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--blue);
+  }
+  .luggage-owner { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: 'Sora', sans-serif;
+  }
+  .status-waiting { background: #fef3c7; color: #92400e; }
+  .status-transit { background: #dbeafe; color: #1e40af; }
+  .status-delivered { background: #d1fae5; color: #065f46; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 40px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .modal-title { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 20px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; }
+
+  .form-input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Sora', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--blue); background: #fff; }
+
+  .form-select {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Sora', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+  .form-select:focus { border-color: var(--blue); }
+
+  .btn-gen {
+    background: var(--bg);
+    border: 1.5px dashed var(--blue);
+    color: var(--blue);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: all 0.2s;
+  }
+  .btn-gen:hover { background: #eff6ff; }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .btn-cancel {
+    flex: 1;
+    padding: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: none;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+  .btn-cancel:hover { background: var(--bg); }
+  .btn-submit {
+    flex: 2;
+    padding: 14px;
+    background: var(--blue);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-submit:hover { background: var(--blue-light); }
+
+  /* ── MANAGE SCREEN ── */
+  #manage { background: var(--bg); }
+
+  .search-box {
+    padding: 16px 20px;
+    position: sticky; top: 60px; z-index: 50;
+    background: var(--bg);
+  }
+  .search-input-wrap {
+    position: relative;
+  }
+  .search-input-wrap .icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; color: var(--muted);
+  }
+  .search-input {
+    width: 100%;
+    padding: 13px 16px 13px 42px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Sora', sans-serif;
+    background: var(--card);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--blue); }
+
+  .manage-list { padding: 0 20px 40px; display: flex; flex-direction: column; gap: 12px; }
+
+  .manage-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .manage-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .manage-card-info { flex: 1; }
+  .manage-card-code { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 600; color: var(--blue); }
+  .manage-card-name { font-size: 13px; color: var(--text); font-weight: 500; margin-top: 2px; }
+  .manage-card-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .manage-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .btn-status {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+    color: var(--text);
+    min-width: 80px;
+  }
+  .btn-status:hover { border-color: var(--blue); color: var(--blue); }
+  .btn-status.active-waiting { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+  .btn-status.active-transit { background: #dbeafe; border-color: var(--blue); color: #1e40af; }
+  .btn-status.active-delivered { background: #d1fae5; border-color: var(--success); color: #065f46; }
+  .btn-delete {
+    padding: 9px 14px;
+    border: 1.5px solid #fee2e2;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    background: #fff5f5;
+    color: #ef4444;
+    transition: all 0.2s;
+  }
+  .btn-delete:hover { background: #fee2e2; }
+
+  /* ── CUSTOMER SCREEN ── */
+  #customer { background: var(--bg); }
+
+  .track-box {
+    padding: 20px;
+    background: var(--card);
+    margin: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .track-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .track-divider::before, .track-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .track-divider-label { font-size: 13px; font-weight: 600; color: var(--navy); white-space: nowrap; }
+
+  .track-input-row { display: flex; gap: 10px; }
+  .track-input {
+    flex: 1;
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .track-input:focus { border-color: var(--blue); background: #fff; }
+  .btn-track {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    padding: 13px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-track:hover { background: var(--blue-light); }
+
+  /* Track result */
+  .track-result { padding: 20px; }
+
+  .result-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 14px;
+  }
+
+  .tracking-status-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .status-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+  }
+  .status-main.waiting { background: #fffbeb; border: 1.5px solid #fde68a; }
+  .status-main.transit { background: #eff6ff; border: 1.5px solid #bfdbfe; }
+  .status-main.delivered { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+
+  .status-icon { font-size: 28px; }
+  .status-main-text { font-weight: 700; font-size: 15px; }
+  .status-main.waiting .status-main-text { color: #92400e; }
+  .status-main.transit .status-main-text { color: #1e40af; }
+  .status-main.delivered .status-main-text { color: #065f46; }
+  .status-main-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* Timeline */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .timeline-step {
+    display: flex;
+    gap: 14px;
+    position: relative;
+    padding-bottom: 20px;
+  }
+  .timeline-step:last-child { padding-bottom: 0; }
+  .timeline-step:last-child .timeline-line { display: none; }
+
+  .timeline-dot-wrap { display: flex; flex-direction: column; align-items: center; width: 32px; flex-shrink: 0; }
+  .timeline-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+  .timeline-dot.done { background: var(--success); border-color: var(--success); }
+  .timeline-dot.active { background: var(--blue); border-color: var(--blue); animation: pulse 1.5s infinite; }
+  .timeline-dot.pending { background: #f1f5f9; border-color: #cbd5e1; }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(37,99,235,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(37,99,235,0); }
+  }
+
+  .timeline-line {
+    flex: 1;
+    width: 2px;
+    background: var(--border);
+    margin-top: 4px;
+    min-height: 20px;
+  }
+  .timeline-line.done { background: var(--success); }
+
+  .timeline-content { flex: 1; padding-top: 4px; }
+  .timeline-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .timeline-label.active-label { color: var(--blue); }
+  .timeline-label.done-label { color: var(--success); }
+  .timeline-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  .timeline-step.active-step {
+    background: #eff6ff;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid #bfdbfe;
+  }
+
+  /* luggage info card */
+  .luggage-info-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .info-val { font-size: 13px; font-weight: 600; color: var(--text); text-align: right; max-width: 60%; }
+  .info-val.mono { font-family: 'JetBrains Mono', monospace; color: var(--blue); }
+
+  /* Reviews */
+  .reviews-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+  .review-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .review-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .review-text { font-size: 13px; color: var(--text); font-style: italic; margin-bottom: 6px; }
+  .review-name { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .stars { color: var(--gold); font-size: 13px; letter-spacing: 1px; }
+
+  /* Not found */
+  .not-found {
+    text-align: center;
+    padding: 40px 20px;
+    display: none;
+  }
+  .not-found.show { display: block; }
+  .not-found-icon { font-size: 48px; margin-bottom: 16px; }
+  .not-found-title { font-size: 18px; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .not-found-sub { font-size: 14px; color: var(--muted); }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state-text { font-size: 14px; }
+
+  /* Admin Reviews Section */
+  .admin-reviews { padding: 0 20px 40px; }
+  .review-entry {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .reviewer-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue), var(--navy));
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .reviewer-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .reviewer-text { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--navy);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 999;
+    transition: transform 0.3s ease;
+    white-space: nowrap;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+
+  /* Admin password */
+  #admin-login {
+    background: linear-gradient(145deg, var(--navy-dark), var(--navy));
+    min-height: 100vh;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  #admin-login.active { display: flex; }
+  .login-icon { font-size: 48px; margin-bottom: 20px; }
+  .login-title { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+  .login-sub { font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 32px; }
+  .login-card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 320px;
+  }
+  .login-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'Sora', sans-serif;
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    outline: none;
+    margin-bottom: 14px;
+    transition: border-color 0.2s;
+    letter-spacing: 2px;
+  }
+  .login-input::placeholder { color: rgba(255,255,255,0.35); letter-spacing: 0; }
+  .login-input:focus { border-color: var(--blue-light); }
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: var(--blue);
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Sora', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-login:hover { background: var(--blue-light); }
+
+  .login-hint { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 16px; }
+
+  @media (min-width: 480px) {
+    #landing, #admin-login { padding: 60px 40px; }
+    .stats-row { gap: 16px; }
+    .modal { max-width: 440px; border-radius: 24px; margin-bottom: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing" class="screen active">
+  <div class="landing-logo">🧳</div>
+  <h1 class="landing-title">Track<span>It</span></h1>
+  <p class="landing-sub">Smart luggage tracking for everyone</p>
+  <div class="landing-btns">
+    <button class="btn-primary" onclick="goTo('customer')">
+      🔍 Track My Luggage
+    </button>
+    <button class="btn-outline" onclick="goTo('admin-login')">
+      🔐 Admin Portal
+    </button>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div id="admin-login" class="screen">
+  <div class="login-icon">🔐</div>
+  <h2 class="login-title">Admin Access</h2>
+  <p class="login-sub">Enter your password to continue</p>
+  <div class="login-card">
+    <input class="login-input" type="password" id="admin-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkAdminPass()">
+    <button class="btn-login" onclick="checkAdminPass()">Login →</button>
+    <p class="login-hint">Default password: admin123</p>
+  </div>
+  <button class="btn-outline" style="margin-top:20px;max-width:200px;" onclick="goTo('landing')">← Back</button>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div id="admin" class="screen">
+  <div class="topbar">
+    <span style="font-size:20px;">☰</span>
+    <span class="topbar-title">Consignment Admin</span>
+    <button class="notif-btn" onclick="showNotifs()">
+      🔔
+      <span class="notif-badge" id="notif-count">0</span>
+    </button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Registered</div>
+      <div class="stat-value" id="stat-total">0</div>
+    </div>
+    <div class="stat-card in-transit">
+      <div class="stat-label">In Transit</div>
+      <div class="stat-value" id="stat-transit">0</div>
+    </div>
+    <div class="stat-card delivered">
+      <div class="stat-label">Delivered</div>
+      <div class="stat-value" id="stat-delivered">0</div>
+    </div>
+  </div>
+
+  <div class="section-pad">
+    <button class="btn-add" onclick="openAddModal()">+ Add New Luggage</button>
+    <button class="btn-manage" onclick="goTo('manage')">📦 Manage Shipments</button>
+
+    <div class="section-title">Recent Luggage Entries</div>
+    <div class="luggage-list" id="recent-list">
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <div class="empty-state-text">No luggage registered yet</div>
+      </div>
+    </div>
+
+    <div class="section-title">Customer Reviews</div>
+    <div id="admin-reviews-list"></div>
+  </div>
+</div>
+
+<!-- MANAGE SCREEN -->
+<div id="manage" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goTo('admin')">←</button>
+    <span class="topbar-title">Manage Shipments</span>
+    <div style="width:40px"></div>
+  </div>
+  <div class="search-box">
+    <div class="search-input-wrap">
+      <span class="icon">🔍</span>
+      <input class="search-input" id="search-input" placeholder="Search by code or name..." oninput="renderManageList()">
+    </div>
+  </div>
+  <div class="manage-list" id="manage-list"></div>
+</div>
+
+<!-- CUSTOMER SCREEN -->
+<div id="customer" class="screen">
+  <div class="topbar">
+    <button class="topbar-back" onclick="goTo('landing')">←</button>
+    <span class="topbar-title">Track Your Luggage</span>
+    <div style="width:40px"></div>
+  </div>
+
+  <div class="track-box">
+    <div class="track-divider">
+      <span class="track-divider-label">Enter Tracking Number</span>
+    </div>
+    <div class="track-input-row">
+      <input class="track-input" id="track-input" placeholder="e.g. TNX12345678" maxlength="15" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')trackLuggage()">
+      <button class="btn-track" onclick="trackLuggage()">Track</button>
+    </div>
+  </div>
+
+  <div class="track-result" id="track-result" style="display:none">
+    <div class="result-section-title">Tracking Status</div>
+
+    <div class="tracking-status-card">
+      <div class="status-main" id="status-main-card">
+        <span class="status-icon" id="status-icon"></span>
+        <div>
+          <div class="status-main-text" id="status-main-text"></div>
+          <div class="status-main-sub" id="status-main-sub"></div>
+        </div>
+      </div>
+      <div class="timeline" id="tracking-timeline"></div>
+    </div>
+
+    <div class="luggage-info-card" id="luggage-info-card"></div>
+
+    <div class="result-section-title">Customer Reviews</div>
+    <div class="reviews-card" id="customer-reviews"></div>
+  </div>
+
+  <div class="not-found" id="not-found">
+    <div class="not-found-icon">🔎</div>
+    <div class="not-found-title">Not Found</div>
+    <div class="not-found-sub">No luggage found with that tracking number. Please double-check and try again.</div>
+  </div>
+
+  <!-- Static reviews shown before search -->
+  <div id="default-reviews" style="padding:20px">
+    <div class="result-section-title">What Customers Say</div>
+    <div class="reviews-card">
+      <div class="review-item">
+        <div class="stars">★★★★★</div>
+        <div class="review-text">"Excellent service! Very satisfied."</div>
+        <div class="review-name">— Sarah M.</div>
+      </div>
+      <div class="review-item">
+        <div class="stars">★★★★★</div>
+        <div class="review-text">"Luggage arrived on time and in perfect condition!"</div>
+        <div class="review-name">— Mark D.</div>
+      </div>
+      <div class="review-item">
+        <div class="stars">★★★★☆</div>
+        <div class="review-text">"Fast delivery, highly recommended!"</div>
+        <div class="review-name">— James W.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Register New Luggage</div>
+
+    <div class="form-group">
+      <label class="form-label">Tracking Code</label>
+      <input class="form-input" id="f-code" placeholder="e.g. TNX12345678" style="font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" maxlength="15">
+      <button class="btn-gen" onclick="generateCode()">⚡ Auto-generate code</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Owner / Recipient Name</label>
+      <input class="form-input" id="f-name" placeholder="e.g. John Doe">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Luggage Description</label>
+      <input class="form-input" id="f-desc" placeholder="e.g. Black suitcase, 24kg">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Origin</label>
+      <input class="form-input" id="f-origin" placeholder="e.g. Lagos, Nigeria">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Destination</label>
+      <input class="form-input" id="f-dest" placeholder="e.g. London, UK">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Initial Status</label>
+      <select class="form-select" id="f-status">
+        <option value="waiting">Still Waiting</option>
+        <option value="transit">In Transit</option>
+        <option value="delivered">Delivered</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-submit" onclick="submitLuggage()">Register Luggage</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STORAGE ───────────────────────────────────────────────
+const STORE = {
+  get: () => JSON.parse(localStorage.getItem('trackit_luggage') || '[]'),
+  set: (d) => localStorage.setItem('trackit_luggage', JSON.stringify(d)),
+  add: (item) => { const d = STORE.get(); d.unshift(item); STORE.set(d); },
+  update: (code, changes) => {
+    const d = STORE.get();
+    const i = d.findIndex(x => x.code === code);
+    if (i > -1) { d[i] = { ...d[i], ...changes }; STORE.set(d); }
+  },
+  remove: (code) => STORE.set(STORE.get().filter(x => x.code !== code)),
+  find: (code) => STORE.get().find(x => x.code === code.trim().toUpperCase()),
+};
+
+// ─── NAVIGATION ────────────────────────────────────────────
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'admin') renderAdmin();
+  if (id === 'manage') renderManageList();
+  window.scrollTo(0, 0);
+}
+
+// ─── ADMIN AUTH ────────────────────────────────────────────
+const ADMIN_PASS = 'admin123';
+function checkAdminPass() {
+  const val = document.getElementById('admin-pass').value;
+  if (val === ADMIN_PASS) {
+    document.getElementById('admin-pass').value = '';
+    goTo('admin');
+  } else {
+    showToast('Wrong password', 'error');
+    document.getElementById('admin-pass').value = '';
+  }
+}
+
+// ─── RENDER ADMIN ───────────────────────────────────────────
+function renderAdmin() {
+  const data = STORE.get();
+  const transit = data.filter(x => x.status === 'transit').length;
+  const delivered = data.filter(x => x.status === 'delivered').length;
+
+  document.getElementById('stat-total').textContent = data.length;
+  document.getElementById('stat-transit').textContent = transit;
+  document.getElementById('stat-delivered').textContent = delivered;
+  document.getElementById('notif-count').textContent = data.filter(x => x.status === 'waiting').length;
+
+  // Recent list (last 5)
+  const rl = document.getElementById('recent-list');
+  const recent = data.slice(0, 5);
+  if (recent.length === 0) {
+    rl.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">No luggage registered yet</div></div>`;
+  } else {
+    rl.innerHTML = recent.map(item => `
+      <div class="luggage-item" onclick="goTo('manage')">
+        <div>
+          <div class="luggage-code">${item.code}</div>
+          <div class="luggage-owner">${item.name || 'No name'}</div>
+        </div>
+        <span class="status-badge status-${item.status === 'waiting' ? 'waiting' : item.status === 'transit' ? 'transit' : 'delivered'}">
+          ${statusLabel(item.status)}
+        </span>
+      </div>
+    `).join('');
+  }
+
+  // Reviews
+  const reviews = [
+    { name: 'Sarah M.', text: 'Great service, very reliable!', stars: 5 },
+    { name: 'James W.', text: 'Fast delivery, highly recommended!', stars: 5 },
+  ];
+  document.getElementById('admin-reviews-list').innerHTML = reviews.map(r => `
+    <div class="review-entry">
+      <div class="reviewer-avatar">${r.name[0]}</div>
+      <div>
+        <div class="reviewer-name">${r.name}</div>
+        <div class="reviewer-text">${r.text}</div>
+        <div class="stars">${'★'.repeat(r.stars)}${'☆'.repeat(5 - r.stars)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── MANAGE LIST ────────────────────────────────────────────
+function renderManageList() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const data = STORE.get().filter(x =>
+    x.code.toLowerCase().includes(q) ||
+    (x.name || '').toLowerCase().includes(q) ||
+    (x.desc || '').toLowerCase().includes(q)
+  );
+
+  const el = document.getElementById('manage-list');
+  if (data.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">No entries found</div></div>`;
+    return;
+  }
+
+  el.innerHTML = data.map(item => `
+    <div class="manage-card">
+      <div class="manage-card-top">
+        <div class="manage-card-info">
+          <div class="manage-card-code">${item.code}</div>
+          <div class="manage-card-name">${item.name || 'Unknown owner'}</div>
+          <div class="manage-card-desc">${item.desc || ''} ${item.origin ? '· ' + item.origin + ' → ' + (item.dest || '?') : ''}</div>
+        </div>
+        <span class="status-badge status-${item.status === 'waiting' ? 'waiting' : item.status === 'transit' ? 'transit' : 'delivered'}">
+          ${statusLabel(item.status)}
+        </span>
+      </div>
+      <div class="manage-actions">
+        <button class="btn-status ${item.status === 'waiting' ? 'active-waiting' : ''}" onclick="updateStatus('${item.code}','waiting')">Waiting</button>
+        <button class="btn-status ${item.status === 'transit' ? 'active-transit' : ''}" onclick="updateStatus('${item.code}','transit')">In Transit</button>
+        <button class="btn-status ${item.status === 'delivered' ? 'active-delivered' : ''}" onclick="updateStatus('${item.code}','delivered')">Delivered</button>
+        <button class="btn-delete" onclick="deleteLuggage('${item.code}')">🗑</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateStatus(code, status) {
+  STORE.update(code, { status });
+  renderManageList();
+  showToast(`Status updated to ${statusLabel(status)}`, 'success');
+}
+
+function deleteLuggage(code) {
+  if (!confirm(`Delete ${code}?`)) return;
+  STORE.remove(code);
+  renderManageList();
+  showToast('Deleted', 'error');
+}
+
+// ─── ADD MODAL ───────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('add-modal').classList.add('open');
+}
+function closeAddModal() {
+  document.getElementById('add-modal').classList.remove('open');
+  clearForm();
+}
+function clearForm() {
+  ['f-code','f-name','f-desc','f-origin','f-dest'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('f-status').value = 'waiting';
+}
+
+function generateCode() {
+  const prefix = ['TNX','BGH','LMN','XRT','PKG'][Math.floor(Math.random()*5)];
+  const num = Math.floor(Math.random() * 90000000) + 10000000;
+  document.getElementById('f-code').value = prefix + num;
+}
+
+function submitLuggage() {
+  const code = document.getElementById('f-code').value.trim().toUpperCase();
+  const name = document.getElementById('f-name').value.trim();
+  const desc = document.getElementById('f-desc').value.trim();
+  const origin = document.getElementById('f-origin').value.trim();
+  const dest = document.getElementById('f-dest').value.trim();
+  const status = document.getElementById('f-status').value;
+
+  if (!code) { showToast('Please enter a tracking code', 'error'); return; }
+  if (STORE.find(code)) { showToast('Code already exists!', 'error'); return; }
+
+  STORE.add({ code, name, desc, origin, dest, status, createdAt: new Date().toISOString() });
+  closeAddModal();
+  renderAdmin();
+  showToast('Luggage registered! ✓', 'success');
+}
+
+// ─── CUSTOMER TRACK ─────────────────────────────────────────
+function trackLuggage() {
+  const code = document.getElementById('track-input').value.trim().toUpperCase();
+  const resultEl = document.getElementById('track-result');
+  const notFoundEl = document.getElementById('not-found');
+  const defaultEl = document.getElementById('default-reviews');
+
+  if (!code) { showToast('Enter a tracking number', 'error'); return; }
+
+  const item = STORE.find(code);
+
+  defaultEl.style.display = 'none';
+  resultEl.style.display = 'none';
+  notFoundEl.classList.remove('show');
+
+  if (!item) {
+    notFoundEl.classList.add('show');
+    return;
+  }
+
+  // Status card
+  const statusMap = {
+    waiting: { cls: 'waiting', icon: '⏳', text: 'Status: Still Waiting', sub: 'Pending at pickup location.' },
+    transit: { cls: 'transit', icon: '🚚', text: 'Status: In Transit', sub: 'Currently on the way.' },
+    delivered: { cls: 'delivered', icon: '✅', text: 'Status: Delivered', sub: 'Delivered to destination.' },
+  };
+  const s = statusMap[item.status];
+
+  const mainCard = document.getElementById('status-main-card');
+  mainCard.className = 'status-main ' + s.cls;
+  document.getElementById('status-icon').textContent = s.icon;
+  document.getElementById('status-main-text').textContent = s.text;
+  document.getElementById('status-main-sub').textContent = s.sub;
+
+  // Timeline
+  const steps = [
+    { key: 'waiting', label: 'Still Waiting', sub: 'Pending at location', icon: '⏰' },
+    { key: 'transit', label: 'In Transit', sub: 'Package is on the way', icon: '🚚' },
+    { key: 'delivered', label: 'Delivered', sub: 'Delivered to destination', icon: '✅' },
+  ];
+  const statusOrder = { waiting: 0, transit: 1, delivered: 2 };
+  const currentIdx = statusOrder[item.status];
+
+  document.getElementById('tracking-timeline').innerHTML = steps.map((step, i) => {
+    let dotClass = 'pending';
+    let lineClass = '';
+    if (i < currentIdx) { dotClass = 'done'; lineClass = 'done'; }
+    if (i === currentIdx) dotClass = 'active';
+
+    const isActive = i === currentIdx;
+    const isDone = i < currentIdx;
+
+    return `
+      <div class="timeline-step ${isActive ? 'active-step' : ''}">
+        <div class="timeline-dot-wrap">
+          <div class="timeline-dot ${dotClass}">${isDone ? '✓' : isActive ? step.icon : ''}</div>
+          <div class="timeline-line ${lineClass}"></div>
+        </div>
+        <div class="timeline-content">
+          <div class="timeline-label ${isActive ? 'active-label' : isDone ? 'done-label' : ''}">${i+1}. ${step.label}</div>
+          <div class="timeline-sub">${isActive ? step.sub : isDone ? 'Completed' : 'Not yet reached'}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Info card
+  document.getElementById('luggage-info-card').innerHTML = `
+    <div class="info-row"><span class="info-key">Tracking Code</span><span class="info-val mono">${item.code}</span></div>
+    <div class="info-row"><span class="info-key">Recipient</span><span class="info-val">${item.name || 'N/A'}</span></div>
+    ${item.desc ? `<div class="info-row"><span class="info-key">Description</span><span class="info-val">${item.desc}</span></div>` : ''}
+    ${item.origin ? `<div class="info-row"><span class="info-key">Origin</span><span class="info-val">${item.origin}</span></div>` : ''}
+    ${item.dest ? `<div class="info-row"><span class="info-key">Destination</span><span class="info-val">${item.dest}</span></div>` : ''}
+    <div class="info-row"><span class="info-key">Registered</span><span class="info-val">${formatDate(item.createdAt)}</span></div>
+  `;
+
+  // Reviews
+  document.getElementById('customer-reviews').innerHTML = `
+    <div class="review-item">
+      <div class="stars">★★★★★</div>
+      <div class="review-text">"Excellent service! Very satisfied."</div>
+      <div class="review-name">— Verified Customer</div>
+    </div>
+    <div class="review-item">
+      <div class="stars">★★★★★</div>
+      <div class="review-text">"Luggage arrived on time and in perfect condition!"</div>
+      <div class="review-name">— Mark D.</div>
+    </div>
+  `;
+
+  resultEl.style.display = 'block';
+}
+
+// ─── HELPERS ───────────────────────────────────────────────
+function statusLabel(s) {
+  return s === 'waiting' ? 'Still Waiting' : s === 'transit' ? 'In Transit' : 'Delivered';
+}
+
+function formatDate(iso) {
+  if (!iso) return 'N/A';
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function showNotifs() {
+  const w = STORE.get().filter(x => x.status === 'waiting').length;
+  showToast(`${w} item${w !== 1 ? 's' : ''} still waiting`, 'success');
+}
+
+// ─── TOAST ────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  void t.offsetWidth;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── CLOSE MODAL ON OVERLAY CLICK ─────────────────────────
+document.getElementById('add-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeAddModal();
+});
+</script>
+</body>
+</html>
